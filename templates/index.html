@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Titanic Survival Predictor</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>🚢 Titanic Survival Predictor</h1>
+
+        <form method="POST">
+            <label for="pclass">Passenger Class</label>
+            <select name="pclass" id="pclass" required>
+                <option value="" disabled selected>Select class</option>
+                <option value="1">1st Class</option>
+                <option value="2">2nd Class</option>
+                <option value="3">3rd Class</option>
+            </select>
+
+            <label for="sex">Sex</label>
+            <select name="sex" id="sex" required>
+                <option value="" disabled selected>Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+            </select>
+
+            <label for="age">Age</label>
+            <input type="number" name="age" id="age" placeholder="e.g. 29" step="0.1" required>
+
+            <label for="sibsp">Siblings / Spouses Aboard</label>
+            <input type="number" name="sibsp" id="sibsp" placeholder="e.g. 0" required>
+
+            <label for="parch">Parents / Children Aboard</label>
+            <input type="number" name="parch" id="parch" placeholder="e.g. 0" required>
+
+            <label for="fare">Fare</label>
+            <input type="number" name="fare" id="fare" placeholder="e.g. 32.2" step="0.01" required>
+
+            <label for="embarked">Port of Embarkation</label>
+            <select name="embarked" id="embarked" required>
+                <option value="" disabled selected>Select port</option>
+                <option value="C">Cherbourg</option>
+                <option value="Q">Queenstown</option>
+                <option value="S">Southampton</option>
+            </select>
+
+            <button type="submit">Predict Survival</button>
+        </form>
+
+        {% if prediction is not none %}
+            {% if prediction == 1 %}
+                <div class="result survived">
+                    🎉 Prediction: Passenger is likely to <strong>SURVIVE</strong>
+                </div>
+            {% else %}
+                <div class="result not-survived">
+                    ❌ Prediction: Passenger is unlikely to <strong>SURVIVE</strong>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <script src="../static/js/script.js"></script>
+
+</body>
+</html>
