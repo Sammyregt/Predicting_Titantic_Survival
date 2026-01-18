@@ -6,9 +6,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, classification_report
 from sklearn.metrics import roc_curve, auc
+import joblib
 
 # Load the dataset
 data = pd.read_csv('Data/train.csv')
@@ -20,9 +22,6 @@ print(data.head())
 # Dropping unnecessary columns not useful for prediction
 data = data.drop(columns=['Name', 'Ticket', 'Cabin'], axis=1)
 
-# Converting categorical variables into dummy variables
-data = pd.get_dummies(data, columns=['Sex', 'Embarked'], drop_first=True)
-
 # Handling missing values
 data['Age'] = data['Age'].fillna(data['Age'].median())
 
@@ -33,8 +32,17 @@ if 'Embarked' in data.columns:
 else:
     print("Column 'Embarked' not found in the dataset.")
 
+# Converting categorical variables into dummy variables
+data = pd.get_dummies(data, columns=['Sex', 'Embarked'], drop_first=True)
+
+#scaling the numerical features
+scaler = StandardScaler()
+numerical_features = ['Age', 'Fare', 'SibSp', 'Parch', 'Pclass']
+data[numerical_features] = scaler.fit_transform(data[numerical_features])
+
+
 # split the data into features and target variable
-X = data.drop('Survived', axis=1)
+X = data.drop(columns=['Survived'], axis=1)
 y = data['Survived']
 
 # Splitting the dataset into training and testing sets
@@ -86,6 +94,6 @@ plt.legend(loc="lower right")
 plt.show()
 
 # === Export trained Logistic Regression model ===
-import joblib
+
 joblib.dump(model, r'model/logistic_regression_model.joblib')
 print('Model saved to: model/logistic_regression_model.joblib')

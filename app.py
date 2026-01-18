@@ -8,14 +8,21 @@ from pathlib import Path
 app = Flask(__name__)
 
 # Load trained model (pipeline) using file-relative path
-BASE_DIR = Path(__file__).resolve().parent  # Points to app/
-MODEL_PATH = BASE_DIR / "model" / "logistic_regression_model.joblib"
+#BASE_DIR = Path(__file__).resolve().parent  # Points to app/
+MODEL_PATH = Path("model") / "logistic_regression_model.joblib"
+SCALER_PATH = Path("model") / "scaler.joblib"
 
 # Ensure model exists
-if not MODEL_PATH.exists():
+if not MODEL_PATH.exists() or not SCALER_PATH.exists():
     raise FileNotFoundError(f"Model file not found at {MODEL_PATH}")
 
 model = jb.load(MODEL_PATH)
+scaler = jb.load(SCALER_PATH)
+
+#columns expected by the model
+NUMERIC_COLS = ['Pclass', 'Age', 'SibSp', 'Parch', 'Fare']
+SEX_COLUMNS = ['Sex_male']
+EMBARKED_COLUMNS = ['Embarked_Q', 'Embarked_S']
 
 # Home route
 @app.route("/", methods=["GET", "POST"])
@@ -35,14 +42,37 @@ def home():
 
             # Convert input to DataFrame (required if using preprocessing pipeline)
             input_df = pd.DataFrame({
-                'pclass': [pclass],
-                'sex': [sex],
-                'age': [age],
-                'sibsp': [sibsp],
-                'parch': [parch],
-                'fare': [fare],
-                'embarked': [embarked]
+                'Pclass': [pclass],
+                'Sex': [sex],
+                'Age': [age],
+                'SibSp': [sibsp],
+                'Parch': [parch],
+                'Fare': [fare],
+                'Embarked': [embarked]
             })
+
+            # -- Onehoting categorical variables --
+            sex_dummies = pd.get_dummies(input_df['Sex'], prefix='Sex', drop_first=True)
+            for col in SEX_COLUMNS:
+                if col not in sex_dummies:
+                    sex_dummies[col] = 0
+
+            embarked_dummies = pd.get_dummies(input_df['Embarked'], prefix='Embarked', drop_first=True)
+            for col in EMBARKED_COLUMNS:
+                if col not in embarked_dummies:
+                    embarked_dummies[col] = 0
+
+            input_df = input_df.drop(['Sex', 'Embarked'], axis=1)
+
+            # Concatenate one-hot encoded columns
+            input_df = pd.concat([input_df, sex_dummies, embarked_dummies], axis=1)
+
+            # --- Scale numeric columns ---
+            input_df[NUMERIC_COLS] = scaler.transform(input_df[NUMERIC_COLS])
+
+            # Ensure all expected columns are present
+            expected_columns = NUMERIC_COLS + SEX_COLUMNS + EMBARKED_COLUMNS
+            input_df = input_df[expected_columns]
 
             # Make prediction
             prediction = model.predict(input_df)[0]
